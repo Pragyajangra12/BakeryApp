@@ -1,4 +1,3 @@
-import 'package:bakery_app/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:bakery_app/front.dart';
 void main() {

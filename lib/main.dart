@@ -1,7 +1,20 @@
+import 'package:bakery_app/login.dart';
+import 'package:bakery_app/splash.dart';
 import 'package:flutter/material.dart';
-import 'package:bakery_app/front.dart';
-void main() {
-  runApp(const MyApp());
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'cart_provider.dart';
+import 'front.dart';
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(
+      MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_)=>CartProvider()),
+          ],
+      child: const MyApp())
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,7 +26,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      home: FrontPage(),
+      home: LoginPage(),
     );
   }
 }

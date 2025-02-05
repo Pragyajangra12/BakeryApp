@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "485894824783",
+    "project_id": "bakeryapp-20a4b",
+    "storage_bucket": "bakeryapp-20a4b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:485894824783:android:54e1ca92be478a0cf31b3a",
+        "android_client_info": {
+          "package_name": "com.example.bakery_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALo3wj345dFnDwZyAh4XeMJIbYxrlgySo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

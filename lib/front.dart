@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'brownie.dart'; // Ensure this import is correct
+import 'brownie.dart';
+import 'cart_provider.dart';
+import 'package:provider/provider.dart';// Ensure this import is correct
 
 class FrontPage extends StatefulWidget {
   const FrontPage({super.key});
@@ -8,13 +10,12 @@ class FrontPage extends StatefulWidget {
   @override
   State<FrontPage> createState() => _FrontPageState();
 }
-
 class _FrontPageState extends State<FrontPage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
     const HomeScreen(),
-    const CartScreen(),
+     CartScreen(),
     const ProfileScreen(),
   ];
 
@@ -47,29 +48,51 @@ class _FrontPageState extends State<FrontPage> {
     );
   }
 }
-
-
 // CartScreen
 class CartScreen extends StatelessWidget {
-  const CartScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Your Cart')),
-      body: const Center(
-        child: Text(
-          'Your Cart is Empty!',
-          style: TextStyle(fontSize: 24),
-        ),
+      appBar: AppBar(title: Text('Your Cart')),
+      body: cart.cartItems.isEmpty
+          ? Center(child: Text('Your Cart is Empty!', style: TextStyle(fontSize: 24)))
+          : ListView.builder(
+        itemCount: cart.cartItems.length,
+        itemBuilder: (context, index) {
+          final item = cart.cartItems[index];
+
+          return ListTile(
+            leading: Image.asset(item['image'], width: 50, height: 50),
+            title: Text(item['name']),
+            subtitle: Text('Rs. ${item['price']}'),
+            trailing: IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () => cart.removeFromCart(index),
+            ),
+          );
+        },
       ),
+      bottomNavigationBar: cart.cartItems.isNotEmpty
+          ? Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ElevatedButton(
+          onPressed: () {
+            cart.clearCart();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Order Placed Successfully!')),
+            );
+          },
+          child: Text('Checkout'),
+        ),
+      )
+          : null,
     );
   }
 }
-
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,12 +117,37 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String userName = "Pragya"; // Change this dynamically if needed
   String location = "Fetching location...";
+  TextEditingController _searchController = TextEditingController();
+  String searchQuery = "";
+  final List<Map<String, dynamic>> _items = [
+    {"label": "Brownie", "image": "lib/images/brownie1.png", "price": null},
+    {"label": "Cakes", "image": "lib/images/cake1.jpeg", "price": null},
+    {"label": "Cupcakes", "image": "lib/images/cupcake.jpeg", "price": null},
+    {"label": "Donuts", "image": "lib/images/donut.jpeg", "price": null},
+    {"label": "Chocolate Brownie", "image": "lib/images/brownie.jpeg", "price": 23.9},
+    {"label": "Chocolate Donuts", "image": "lib/images/donut.jpeg", "price": 23.9},
+    {"label": "Black Forest Cake", "image": "lib/images/cake.jpeg", "price": 23.9},
+    {"label": "Vanilla Cupcake", "image": "lib/images/cupcake.jpeg", "price": 23.9},
+  ];
+
+  List<Map<String, dynamic>> _filteredItems = [];
 
   @override
   void initState() {
     super.initState();
+    _filteredItems = _items;
     _getLocation();
   }
+  void _filterItems(String query) {
+    setState(() {
+      searchQuery = query;
+      _filteredItems = _items
+          .where((item) =>
+          item["label"]!.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
 
   Future<void> _getLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -143,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.shopping_cart, color: Colors.black),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const CartScreen()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => CartScreen()));
             },
           ),
         ],
@@ -214,10 +262,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       children: const [
-                        CategoryBox(imagePath: 'lib/images/brownie1.png', label: 'Brownie', text: "", nextPage: BrowniePage()),
-                        CategoryBox(imagePath: 'lib/images/cake1.jpeg', label: 'Cakes', text: "", nextPage: BrowniePage()),
-                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Cupcakes', text: "", nextPage: BrowniePage()),
-                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Donuts', text: "", nextPage: BrowniePage()),
+                        CategoryBox(imagePath: 'lib/images/brownie1.png', label: 'Brownie', text: "", nextPage: BrowniePage(),price: 23.9,),
+                        CategoryBox(imagePath: 'lib/images/cake1.jpeg', label: 'Cakes', text: "", nextPage: BrowniePage(),price:23.9),
+                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Cupcakes', text: "", nextPage: BrowniePage(),price:23.9),
+                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Donuts', text: "", nextPage: BrowniePage(),price:23.9),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -234,10 +282,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       children: const [
-                        CategoryBox(imagePath: 'lib/images/brownie.jpeg', label: 'Chocolate Brownie', text: 'Rs. 400', nextPage: BrowniePage()),
-                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Chocolate Donuts', text: 'Rs. 500', nextPage: BrowniePage()),
-                        CategoryBox(imagePath: 'lib/images/cake.jpeg', label: 'Black Forest Cake', text: 'Rs. 460', nextPage: BrowniePage()),
-                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Vanilla Cupcake', text: 'Rs. 700', nextPage: BrowniePage()),
+                        CategoryBox(imagePath: 'lib/images/brownie.jpeg', label: 'Chocolate Brownie', text: '', nextPage: BrowniePage(),price:23.9),
+                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Chocolate Donuts', text: '', nextPage: BrowniePage(),price:23.9),
+                        CategoryBox(imagePath: 'lib/images/cake.jpeg', label: 'Black Forest Cake', text: '', nextPage: BrowniePage(),price:23.9),
+                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Vanilla Cupcake', text: '', nextPage: BrowniePage(),price:23.9),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -251,19 +299,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 class CategoryBox extends StatelessWidget {
   final String imagePath;
   final String label;
   final String text;
+  final double price; // Price of the item
   final Widget nextPage;
 
-  const CategoryBox({super.key, required this.imagePath, required this.label, required this.text, required this.nextPage});
+  const CategoryBox({
+    super.key,
+    required this.imagePath,
+    required this.label,
+    required this.text,
+    required this.price,
+    required this.nextPage,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // Navigate to the next page
         Navigator.push(context, MaterialPageRoute(builder: (context) => nextPage));
+
+        // Add item to the cart
+        Provider.of<CartProvider>(context, listen: false)
+            .addToCart(label, imagePath, price);
+
+        // Show snackbar confirmation
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$label added to cart')),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -288,6 +355,10 @@ class CategoryBox extends StatelessWidget {
             Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             if (text.isNotEmpty)
               Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+            Text(
+              'Rs. ${price.toStringAsFixed(2)}',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),

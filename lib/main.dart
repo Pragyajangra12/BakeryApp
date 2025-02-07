@@ -1,10 +1,8 @@
-import 'package:bakery_app/login.dart';
-import 'package:bakery_app/splash.dart';
+import 'package:bakery_app/files/productDetails.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'cart_provider.dart';
-import 'front.dart';
+import 'files/cart_provider.dart';
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -26,7 +24,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      home: LoginPage(),
+      home: ProductDetailPage(),
     );
   }
 }

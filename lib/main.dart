@@ -1,4 +1,4 @@
-import 'package:bakery_app/files/productDetails.dart';
+import 'package:bakery_app/files/front.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      home: ProductDetailPage(),
+      home: FrontPage(),
     );
   }
 }

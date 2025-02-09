@@ -1,9 +1,10 @@
+import 'package:bakery_app/files/productDetails.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'brownie.dart';
 import 'cart_provider.dart';
 import 'package:provider/provider.dart';// Ensure this import is correct
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 class FrontPage extends StatefulWidget {
   const FrontPage({super.key});
 
@@ -16,7 +17,7 @@ class _FrontPageState extends State<FrontPage> {
   final List<Widget> _pages = [
     const HomeScreen(),
      CartScreen(),
-    const ProfileScreen(),
+     ProfileScreen(),
   ];
 
   @override
@@ -42,6 +43,7 @@ class _FrontPageState extends State<FrontPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
             label: 'Profile',
+
           ),
         ],
       ),
@@ -91,21 +93,127 @@ class CartScreen extends StatelessWidget {
     );
   }
 }
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  String _userName = "User Name";
+  String _email = "user@example.com";
+  String _profilePic = "assets/profile.png"; // Default profile image
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc = await _firestore.collection("users").doc(user.uid).get();
+      if (userDoc.exists) {
+        setState(() {
+          _userName = userDoc["name"] ?? "Guest";
+          _email = userDoc["email"] ?? "guest@example.com";
+          _profilePic = userDoc["profilePic"] ?? "assets/profile.png";
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: const Center(
-        child: Text(
-          'User Profile Page',
-          style: TextStyle(fontSize: 24),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Profile"),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Profile Picture
+            CircleAvatar(
+              radius: 50,
+              backgroundImage: _profilePic.startsWith("http")
+                  ? NetworkImage(_profilePic)
+                  : AssetImage(_profilePic) as ImageProvider,
+            ),
+            const SizedBox(height: 10),
+
+            // Name and Email
+            Text(
+              _userName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              _email,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+
+            // Buttons Section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildProfileButton("Promotion", Icons.card_giftcard),
+                const SizedBox(width: 10),
+                _buildProfileButton("Badges", Icons.verified),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Profile Options List
+            _buildProfileOption("My Orders", Icons.shopping_bag),
+            _buildProfileOption("Contact Us", Icons.support_agent),
+            _buildProfileOption("Settings", Icons.settings),
+            _buildProfileOption("Sign Out", Icons.logout, logout: true),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildProfileButton(String title, IconData icon) {
+    return ElevatedButton.icon(
+      onPressed: () {},
+      icon: Icon(icon, color: Colors.white),
+      label: Text(title),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.brown,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Widget _buildProfileOption(String title, IconData icon, {bool logout = false}) {
+    return ListTile(
+      leading: Icon(icon, color: logout ? Colors.red : Colors.brown),
+      title: Text(title, style: const TextStyle(fontSize: 16)),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+      onTap: () {
+        if (logout) {
+          _logoutUser();
+        }
+      },
+    );
+  }
+
+  Future<void> _logoutUser() async {
+    await _auth.signOut(); // Sign out from Firebase Auth
+    Navigator.pushReplacementNamed(context, "/login"); // Navigate to login
+  }
 }
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -262,10 +370,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       children: const [
-                        CategoryBox(imagePath: 'lib/images/brownie1.png', label: 'Brownie', text: "", nextPage: BrowniePage(),price: 23.9,),
-                        CategoryBox(imagePath: 'lib/images/cake1.jpeg', label: 'Cakes', text: "", nextPage: BrowniePage(),price:23.9),
-                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Cupcakes', text: "", nextPage: BrowniePage(),price:23.9),
-                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Donuts', text: "", nextPage: BrowniePage(),price:23.9),
+                        CategoryBox(imagePath: 'lib/images/brownie1.png', label: 'Brownie',description:'',price: 23.9,ingredients: ['']),
+                        CategoryBox(imagePath: 'lib/images/cake1.jpeg', label: 'Cakes',description: '', price:23.9,ingredients: [''],),
+                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Cupcakes',description: '', price:23.9,ingredients: [''],),
+                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Donuts',description: '',price:23.9,ingredients:[''],),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -282,10 +390,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       children: const [
-                        CategoryBox(imagePath: 'lib/images/brownie.jpeg', label: 'Chocolate Brownie', text: '', nextPage: BrowniePage(),price:23.9),
-                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Chocolate Donuts', text: '', nextPage: BrowniePage(),price:23.9),
-                        CategoryBox(imagePath: 'lib/images/cake.jpeg', label: 'Black Forest Cake', text: '', nextPage: BrowniePage(),price:23.9),
-                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Vanilla Cupcake', text: '', nextPage: BrowniePage(),price:23.9),
+                        CategoryBox(imagePath: 'lib/images/brownie.jpeg', label: 'Chocolate Brownie',description:'A rich and decadent treat combining velvety chocolate with the nutty crunch of hazelnuts.',price:1200.0,ingredients: ['Dark Chocolate, Hazelnuts, Sugar, Butter, Eggs, Flour, Vanilla Extract, Baking Powder, Salt',]),
+                        CategoryBox(imagePath: 'lib/images/donut.jpeg', label: 'Chocolate Donuts', description: 'Soft and fluffy chocolate donuts topped with chocolate glaze.', price:600.0,ingredients: ['Strawberries, Whipped Cream, Sugar, Butter, Eggs, Flour']),
+                        CategoryBox(imagePath: 'lib/images/cake.jpeg', label: 'Black Forest Cake', description: 'A layered chocolate cake with cherries and whipped cream.', price:500.0,ingredients: ['Cocoa Powder, Buttermilk, Vinegar',]),
+                        CategoryBox(imagePath: 'lib/images/cupcake.jpeg', label: 'Vanilla Cupcake', description: 'A classic vanilla cupcake with buttercream frosting',price:350.0,ingredients: ['Cream Cheese, Sugar, Butter, Eggs, Flour, Baking Powder, Salt',]),
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -303,17 +411,18 @@ class _HomeScreenState extends State<HomeScreen> {
 class CategoryBox extends StatelessWidget {
   final String imagePath;
   final String label;
-  final String text;
+  final String description;
   final double price; // Price of the item
-  final Widget nextPage;
+  final List<String> ingredients;
 
   const CategoryBox({
     super.key,
     required this.imagePath,
     required this.label,
-    required this.text,
+    required this.description,
     required this.price,
-    required this.nextPage,
+    required this.ingredients,
+    
   });
 
   @override
@@ -321,11 +430,19 @@ class CategoryBox extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         // Navigate to the next page
-        Navigator.push(context, MaterialPageRoute(builder: (context) => nextPage));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => ProductDetailPage(
+                    imagePath: imagePath,
+                    label: label,
+                    description: description,
+                    price: price,
+                    ingredients: ingredients)));
 
         // Add item to the cart
         Provider.of<CartProvider>(context, listen: false)
-            .addToCart(label, imagePath, price);
+            .addToCart(label: label, price: price,imagePath: imagePath);
 
         // Show snackbar confirmation
         ScaffoldMessenger.of(context).showSnackBar(
@@ -352,13 +469,6 @@ class CategoryBox extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            if (text.isNotEmpty)
-              Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-            Text(
-              'Rs. ${price.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
           ],
         ),
       ),

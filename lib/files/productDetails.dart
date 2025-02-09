@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 
 class ProductDetailPage extends StatelessWidget {
-  const ProductDetailPage({Key? key}) : super(key: key);
-
+  final String imagePath;
+  final String label;
+  final String description;
+  final double price;
+  final List<String> ingredients;
+  const ProductDetailPage({
+    super.key,
+    this.imagePath = 'lib/images/default.jpg',  // ✅ Provide default image
+    this.label = 'Unknown Cake',  // ✅ Default text
+    this.description = 'No description available',  // ✅ Default text
+    this.price = 0.0,  // ✅ Default price
+    this.ingredients = const ['No ingredients listed'],  // ✅ Default list
+  });
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery.of(context).size.height; // Get full screen height
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
@@ -17,10 +29,10 @@ class ProductDetailPage extends StatelessWidget {
                 Container(
                   height: screenHeight * 0.5, // Image covers half the screen
                   width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFED8CC),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFED8CC),
                     image: DecorationImage(
-                      image: AssetImage("lib/images/cake1.jpeg"),
+                      image: AssetImage(imagePath), // Dynamic Image
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -37,6 +49,7 @@ class ProductDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 30),
+
             // Product details
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -46,17 +59,17 @@ class ProductDetailPage extends StatelessWidget {
                   // Title and Price
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Text(
-                        'Chocolate Hazelnut',
-                        style: TextStyle(
+                        label, // Dynamic Title
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '₹1200.00',
-                        style: TextStyle(
+                        '₹$price', // Dynamic Price
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -99,8 +112,7 @@ class ProductDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Chocolate Hazelnut: A rich and decadent treat combining velvety chocolate with the nutty crunch of hazelnuts. '
-                        'Perfect for satisfying sweet cravings, this indulgent flavor is a crowd favorite at any bakery.',
+                    description, // Dynamic Description
                     style: TextStyle(
                       color: Colors.grey[600],
                       height: 1.5,
@@ -118,7 +130,7 @@ class ProductDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Dark Chocolate, Hazelnuts, Sugar, Butter, Eggs, Flour, Vanilla Extract, Baking Powder, Salt',
+                    ingredients.join(', '), // Dynamic Ingredients
                     style: TextStyle(
                       color: Colors.grey[600],
                       height: 1.5,
@@ -131,7 +143,9 @@ class ProductDetailPage extends StatelessWidget {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Add to cart functionality
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFC2185B),
                         shape: RoundedRectangleBorder(
@@ -157,4 +171,3 @@ class ProductDetailPage extends StatelessWidget {
     );
   }
 }
-

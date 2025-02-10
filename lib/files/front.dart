@@ -1,6 +1,7 @@
 import 'package:bakery_app/files/productDetails.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'cart_provider.dart';
 import 'package:provider/provider.dart';// Ensure this import is correct
 import 'package:firebase_auth/firebase_auth.dart';
@@ -256,27 +257,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-
   Future<void> _getLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      setState(() => location = "Location disabled");
-      return;
-    }
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.deniedForever) {
-        setState(() => location = "Location denied");
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() => location = "Location services are disabled");
         return;
       }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.deniedForever) {
+          setState(() => location = "Location permissions are denied");
+          return;
+        }
+      }
+
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+      // Fetch address from coordinates
+      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+        setState(() {
+          location = "${place.locality}, ${place.country}";
+        });
+      } else {
+        setState(() => location = "Address not found");
+      }
+    } catch (e) {
+      setState(() => location = "Error: $e");
     }
-
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    setState(() => location = "${position.latitude}, ${position.longitude}");
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
